@@ -1,0 +1,10 @@
+{
+    "Name": "Patch Anything",
+    "Author": "Robin O'Connell",
+    "Version": "0.0.1",
+    "Description": "Simplifies patching several parts of the game.",
+    "UniqueID": "spindly_mist.PatchAnything",
+    "EntryDll": "PatchAnything.dll",
+    "MinimumApiVersion": "3.5.0",
+    "UpdateKeys": []
+}
