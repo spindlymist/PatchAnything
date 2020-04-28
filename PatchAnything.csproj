@@ -42,8 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SkillsAndProfessions\Menus\FlexibleLevelUpMenu.cs" />
     <Compile Include="ModEntry.cs" />
+    <Compile Include="SkillsAndProfessions\Profession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SkillsAndProfessions\Skill.cs" />
+    <Compile Include="SkillsAndProfessions\SkillsAndProfessionsManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="manifest.json" />
