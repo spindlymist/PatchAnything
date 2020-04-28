@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 namespace PatchAnything.SkillsAndProfessions {
     class Profession {
 
-        public int ID { get { return id; } }
-        public string Name { get { return name; } }
-        public int SkillID { get { return skillID; } }
+        public int ID { get; }
+        public string Name { get; }
+        public int SkillID { get; }
+        public int SkillLevel { get; }
+        public int[] Prerequisites { get; }
 
-        int id;
-        string name;
-        int skillID;
-
-        public Profession(int id, string name, int skillID) {
-            this.id = id;
-            this.name = name;
-            this.skillID = skillID;
+        public Profession(int id, string name, int skillID, int skillLevel, int[] prerequisites) {
+            ID = id;
+            Name = name;
+            SkillID = skillID;
+            SkillLevel = skillLevel;
+            Prerequisites = prerequisites;
         }
 
     }
