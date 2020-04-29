@@ -1,0 +1,11 @@
+root = true
+
+# All files
+[*]
+indent_style = space
+end_of_line = lf
+
+# cs files
+[*.cs]
+trim_trailing_whitespace = true
+insert_final_newline = true

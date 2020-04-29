@@ -52,6 +52,7 @@
     <Compile Include="SkillsAndProfessions\SkillsAndProfessionsEvents.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".editorconfig" />
     <None Include="manifest.json" />
     <None Include="packages.config" />
   </ItemGroup>

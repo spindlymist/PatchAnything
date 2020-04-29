@@ -36,7 +36,7 @@ namespace PatchAnything.SkillsAndProfessions {
         const int FIELD_COOKING_RECIPE_SKILL = 3;
 
         IDictionary<int, Skill> skills = new Dictionary<int, Skill>();
-        IDictionary<int, Profession> profs = new Dictionary<int, Profession>();
+        IDictionary<int, Profession> professions = new Dictionary<int, Profession>();
 
         public SkillsAndProfessionsDataManager() { }
 
@@ -46,7 +46,7 @@ namespace PatchAnything.SkillsAndProfessions {
             }
 
             skills.Clear();
-            profs.Clear();
+            professions.Clear();
 
             IDictionary<int, string> skillsData = ModEntry.Instance.Helper.Content.Load<Dictionary<int, string>>("Data/Skills.json", ContentSource.GameContent);
             foreach (var skillKVP in skillsData) {
@@ -63,7 +63,7 @@ namespace PatchAnything.SkillsAndProfessions {
             foreach (var profKVP in profsData) {
                 Profession prof;
                 if (ParseProfession(profKVP.Key, profKVP.Value, out prof)) {
-                    profs.Add(prof.ID, prof);
+                    professions.Add(prof.ID, prof);
                 }
                 else {
                     ModEntry.Instance.Monitor.Log($"Failed to parse profession {profKVP.Key}: {profKVP.Value}", LogLevel.Warn);
@@ -136,22 +136,27 @@ namespace PatchAnything.SkillsAndProfessions {
         }
 
         public Profession GetProfessionByID(int id) {
-            return profs.TryGetValue(id, out Profession prof) ? prof : null;
+            return professions.TryGetValue(id, out Profession prof) ? prof : null;
         }
 
         public LevelUpInfo GetLevelUpInfo(Farmer who, Skill skill, int skillLevel) {
             string dataKey = $"{skill.ID}/{skillLevel}";
             IDictionary<string, string> levelUpData = ModEntry.Instance.Helper.Content.Load<Dictionary<string, string>>("Data/LevelUps.json", ContentSource.GameContent);
 
-            IEnumerable<string> extraInformationLines;
-            IEnumerable<Profession> professions;
+            IEnumerable<string> extraInformationLines = null;
+            IEnumerable<Profession> professions = null;
 
             if (levelUpData.TryGetValue(dataKey, out string data)) {
                 string[] parts = data.Split('/');
 
                 if(parts.Length < FIELD_COUNT_LEVELS) {
+                    extraInformationLines = new List<string>();
+                    professions = new List<Profession>();
+                }
+                else {
                     extraInformationLines = FindExtraInformationLines(parts[FIELD_LEVELS_EXTRA_INFO]);
                     professions = FindProfessions(who, parts[FIELD_LEVELS_PROFS]);
+                    // TODO handle mail
                 }
             }
 
@@ -242,7 +247,27 @@ namespace PatchAnything.SkillsAndProfessions {
         }
 
         IEnumerable<Profession> FindProfessions(Farmer who, string profsData) {
+            IList<Profession> profs = new List<Profession>();
+            IEnumerable<int> profIDs = ParseIntList(profsData);
+            
+            foreach(int id in profIDs) {
+                if(professions.TryGetValue(id, out Profession prof)) {
+                    bool hasPrereqs = true;
 
+                    foreach(int prereq in prof.Prerequisites) {
+                        if(!who.professions.Contains(prereq)) {
+                            hasPrereqs = false;
+                            break;
+                        }
+                    }
+
+                    if(hasPrereqs) {
+                        profs.Add(prof);
+                    }
+                }
+            }
+
+            return profs;
         }
 
     }

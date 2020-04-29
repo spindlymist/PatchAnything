@@ -15,7 +15,6 @@ namespace PatchAnything.SkillsAndProfessions {
         public FlexibleLevelUpMenu(LevelUpInfo levelUp) {
             // TODO generalize this.sourceRectForLevelIcon
             // TODO create ClickableComponents for all professions
-            // TODO generalize mail
             // TODO redo update() and draw()
             // TODO create/find UI framework?
             // TODO generalize extra info

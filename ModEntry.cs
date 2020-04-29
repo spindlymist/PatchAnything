@@ -38,7 +38,7 @@ namespace PatchAnything {
             if (!Context.IsWorldReady)
                 return;
 
-            if (e.NewMenu is StardewValley.Menus.LevelUpMenu levelUpMenu) {
+            if (!(e.NewMenu is FlexibleLevelUpMenu) && e.NewMenu is StardewValley.Menus.LevelUpMenu levelUpMenu) {
                 SkillsAndProfessionsEvents.ReplaceLevelUpMenu(skillsAndProfessions, levelUpMenu);
             }
         }

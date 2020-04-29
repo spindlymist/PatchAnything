@@ -11,9 +11,9 @@ namespace PatchAnything.SkillsAndProfessions {
         public string Name { get; }
         public int SkillID { get; }
         public int SkillLevel { get; }
-        public int[] Prerequisites { get; }
+        public IEnumerable<int> Prerequisites { get; }
 
-        public Profession(int id, string name, int skillID, int skillLevel, int[] prerequisites) {
+        public Profession(int id, string name, int skillID, int skillLevel, IEnumerable<int> prerequisites) {
             ID = id;
             Name = name;
             SkillID = skillID;
