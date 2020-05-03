@@ -1,0 +1,20 @@
+{
+    "Format": "1.13.0",
+    "Changes": [
+        {
+            "Action": "Load",
+            "Target": "Data/Skills",
+            "FromFile": "assets/Data/Skills.json"
+        },
+        {
+            "Action": "Load",
+            "Target": "Data/Professions",
+            "FromFile": "assets/Data/Professions.json"
+        },
+        {
+            "Action": "Load",
+            "Target": "Data/LevelUps",
+            "FromFile": "assets/Data/LevelUps.json"
+        }
+    ]
+ }

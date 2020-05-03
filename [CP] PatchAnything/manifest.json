@@ -1,0 +1,12 @@
+{
+  "Name": "[CP] Patch Anything",
+  "Author": "Robin O'Connell",
+  "Version": "0.0.1",
+  "Description": "Base content for Patch Anything.",
+  "UniqueID": "spindly_mist.PatchAnything.CP",
+  "MinimumApiVersion": "3.5.0",
+  "UpdateKeys": [],
+  "ContentPackFor": {
+    "UniqueID": "Pathoschild.ContentPatcher"
+  }
+}
