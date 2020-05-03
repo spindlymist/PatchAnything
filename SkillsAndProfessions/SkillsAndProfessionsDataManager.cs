@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
@@ -9,13 +10,13 @@ using StardewValley;
 namespace PatchAnything.SkillsAndProfessions {
     class SkillsAndProfessionsDataManager {
 
-        // Skill Format          id: "name"
-        // Example               0: "Farming"
+        // Skill Format          "id": "name"
+        // Example               "0": "Farming"
         const int FIELD_COUNT_SKILLS = 1;
         const int FIELD_SKILLS_NAME  = 0;
 
-        // Profession Format     id: "name/skill_id/skill_level/prereq0,prereq1,..."
-        // Example               4: "Artisan/0/10/1"
+        // Profession Format     "id": "name/skill_id/skill_level/prereq0,prereq1,..."
+        // Example               "4": "Artisan/0/10/1"
         const int FIELD_COUNT_PROFS       = 4;
         const int FIELD_PROFS_NAME        = 0;
         const int FIELD_PROFS_SKILL_ID    = 1;
@@ -48,10 +49,13 @@ namespace PatchAnything.SkillsAndProfessions {
             skills.Clear();
             professions.Clear();
 
-            IDictionary<int, string> skillsData = ModEntry.Instance.Helper.Content.Load<Dictionary<int, string>>("Data/Skills.json", ContentSource.GameContent);
+            IDictionary<int, string> skillsData = ModEntry.Instance.Helper.Content.Load<Dictionary<int, string>>("Data/Skills", ContentSource.GameContent);
+            ModEntry.Instance.Monitor.Log($"Found {skillsData.Count} skill entries", LogLevel.Info);
             foreach (var skillKVP in skillsData) {
+                ModEntry.Instance.Monitor.Log($"Parsing {skillKVP.Key}: {skillKVP.Value}", LogLevel.Info);
                 Skill skill;
                 if (ParseSkill(skillKVP.Key, skillKVP.Value, out skill)) {
+                    ModEntry.Instance.Monitor.Log($"Sucessfully parsed skill: {skill.Name}", LogLevel.Info);
                     skills.Add(skill.ID, skill);
                 }
                 else {
@@ -59,10 +63,13 @@ namespace PatchAnything.SkillsAndProfessions {
                 }
             }
 
-            IDictionary<int, string> profsData = ModEntry.Instance.Helper.Content.Load<Dictionary<int, string>>("Data/Professions.json", ContentSource.GameContent);
+            IDictionary<int, string> profsData = ModEntry.Instance.Helper.Content.Load<Dictionary<int, string>>("Data/Professions", ContentSource.GameContent);
+            ModEntry.Instance.Monitor.Log($"Found {skillsData.Count} prof entries", LogLevel.Info);
             foreach (var profKVP in profsData) {
+                ModEntry.Instance.Monitor.Log($"Parsing {profKVP.Key}: {profKVP.Value}", LogLevel.Info);
                 Profession prof;
                 if (ParseProfession(profKVP.Key, profKVP.Value, out prof)) {
+                    ModEntry.Instance.Monitor.Log($"Sucessfully parsed prof: {prof.Name}", LogLevel.Info);
                     professions.Add(prof.ID, prof);
                 }
                 else {
@@ -141,17 +148,16 @@ namespace PatchAnything.SkillsAndProfessions {
 
         public LevelUpInfo GetLevelUpInfo(Farmer who, Skill skill, int skillLevel) {
             string dataKey = $"{skill.ID}/{skillLevel}";
-            IDictionary<string, string> levelUpData = ModEntry.Instance.Helper.Content.Load<Dictionary<string, string>>("Data/LevelUps.json", ContentSource.GameContent);
+            IDictionary<string, string> levelUpData = ModEntry.Instance.Helper.Content.Load<Dictionary<string, string>>("Data/LevelUps", ContentSource.GameContent);
 
-            IEnumerable<string> extraInformationLines = null;
-            IEnumerable<Profession> professions = null;
+            ICollection<string> extraInformationLines = null;
+            ICollection<Profession> professions = null;
 
             if (levelUpData.TryGetValue(dataKey, out string data)) {
                 string[] parts = data.Split('/');
 
                 if(parts.Length < FIELD_COUNT_LEVELS) {
-                    extraInformationLines = new List<string>();
-                    professions = new List<Profession>();
+                    ModEntry.Instance.Monitor.Log($"Failed to parse level up {dataKey}: {data}", LogLevel.Info);
                 }
                 else {
                     extraInformationLines = FindExtraInformationLines(parts[FIELD_LEVELS_EXTRA_INFO]);
@@ -160,19 +166,20 @@ namespace PatchAnything.SkillsAndProfessions {
                 }
             }
 
-            IEnumerable<CraftingRecipe> craftingRecipes = FindCraftingRecipes(skill, skillLevel);
-            IEnumerable<CraftingRecipe> cookingRecipes = FindCookingRecipes(skill, skillLevel);
+            int bigCraftableCount = 0;
+            List<CraftingRecipe> recipes = FindRecipes(skill, skillLevel, false, ref bigCraftableCount);
+            recipes.AddRange(FindRecipes(skill, skillLevel, true, ref bigCraftableCount));
 
-            LevelUpInfo info = new LevelUpInfo(skill, skillLevel, extraInformationLines, craftingRecipes, cookingRecipes, professions);
+            LevelUpInfo info = new LevelUpInfo(skill, skillLevel, extraInformationLines, recipes, bigCraftableCount, professions);
 
             return info;
         }
 
-        IEnumerable<string> FindExtraInformationLines(string extraInfoData) {
+        ICollection<string> FindExtraInformationLines(string extraInfoData) {
             IList<string> extraInfo = new List<string>();
 
             string[] parts = extraInfoData.Split(',');
-            foreach(string stringPath in parts) {
+            foreach (string stringPath in parts) {
                 string infoString = Game1.content.LoadString(stringPath);
                 extraInfo.Add(infoString);
             }
@@ -180,73 +187,49 @@ namespace PatchAnything.SkillsAndProfessions {
             return extraInfo;
         }
 
-        IEnumerable<CraftingRecipe> FindCraftingRecipes(Skill skill, int skillLevel) {
-            ICollection<CraftingRecipe> recipes = new List<CraftingRecipe>();
+        List<CraftingRecipe> FindRecipes(Skill skill, int skillLevel, bool cooking, ref int bigCraftableCount) {
+            Dictionary<string, string> allRecipes = cooking ? CraftingRecipe.cookingRecipes : CraftingRecipe.craftingRecipes;
+            int recipeSourceIndex = cooking ? FIELD_COOKING_RECIPE_SKILL : FIELD_CRAFTING_RECIPE_SKILL;
 
-            foreach (var recipeKVP in CraftingRecipe.craftingRecipes) {
+            List<CraftingRecipe> recipes = new List<CraftingRecipe>();
+
+            foreach (var recipeKVP in allRecipes) {
                 string[] parts = recipeKVP.Value.Split('/');
 
-                if (parts.Length < FIELD_COUNT_CRAFTING_RECIPE) {
+                if (parts.Length < recipeSourceIndex) {
                     ModEntry.Instance.Monitor.Log($"Failed to parse recipe {recipeKVP.Key}: {recipeKVP.Value}", LogLevel.Warn);
                     continue;
                 }
 
-                parts = parts[FIELD_CRAFTING_RECIPE_SKILL].Split(' ');
+                parts = parts[recipeSourceIndex].Split(' ');
+                bool hasLeadingChar = parts[0].Length == 1;
 
-                if (parts.Length < 2) {
+                if (parts.Length < 2 || (hasLeadingChar && parts.Length < 3)) {
                     ModEntry.Instance.Monitor.Log($"Failed to parse recipe {recipeKVP.Key}: {recipeKVP.Value}", LogLevel.Warn);
                     continue;
                 }
 
-                string recipeSkillName = parts[0];
+                string recipeSkillName = parts[hasLeadingChar ? 1 : 0];
                 int recipeSkillLevel;
-                if (int.TryParse(parts[1], out recipeSkillLevel)) {
+                if (!int.TryParse(parts[hasLeadingChar ? 2 : 1], out recipeSkillLevel)) {
                     ModEntry.Instance.Monitor.Log($"Failed to parse recipe {recipeKVP.Key}: {recipeKVP.Value}", LogLevel.Warn);
                     continue;
                 }
 
                 if (skill.Name == recipeSkillName && skillLevel == recipeSkillLevel) {
-                    recipes.Add(new CraftingRecipe(recipeKVP.Key, false));
+                    CraftingRecipe recipe = new CraftingRecipe(recipeKVP.Key, cooking);
+                    recipes.Add(recipe);
+
+                    if(recipe.bigCraftable) {
+                        bigCraftableCount++;
+                    }
                 }
             }
 
             return recipes;
         }
 
-        IEnumerable<CraftingRecipe> FindCookingRecipes(Skill skill, int skillLevel) {
-            ICollection<CraftingRecipe> recipes = new List<CraftingRecipe>();
-
-            foreach (var recipeKVP in CraftingRecipe.cookingRecipes) {
-                string[] parts = recipeKVP.Value.Split('/');
-
-                if (parts.Length < FIELD_COUNT_COOKING_RECIPE) {
-                    ModEntry.Instance.Monitor.Log($"Failed to parse recipe {recipeKVP.Key}: {recipeKVP.Value}", LogLevel.Warn);
-                    continue;
-                }
-
-                parts = parts[FIELD_COOKING_RECIPE_SKILL].Split(' ');
-
-                if (parts.Length < 2) {
-                    ModEntry.Instance.Monitor.Log($"Failed to parse recipe {recipeKVP.Key}: {recipeKVP.Value}", LogLevel.Warn);
-                    continue;
-                }
-
-                string recipeSkillName = parts[0];
-                int recipeSkillLevel;
-                if (int.TryParse(parts[1], out recipeSkillLevel)) {
-                    ModEntry.Instance.Monitor.Log($"Failed to parse recipe {recipeKVP.Key}: {recipeKVP.Value}", LogLevel.Warn);
-                    continue;
-                }
-
-                if (skill.Name == recipeSkillName && skillLevel == recipeSkillLevel) {
-                    recipes.Add(new CraftingRecipe(recipeKVP.Key, true));
-                }
-            }
-
-            return recipes;
-        }
-
-        IEnumerable<Profession> FindProfessions(Farmer who, string profsData) {
+        ICollection<Profession> FindProfessions(Farmer who, string profsData) {
             IList<Profession> profs = new List<Profession>();
             IEnumerable<int> profIDs = ParseIntList(profsData);
             

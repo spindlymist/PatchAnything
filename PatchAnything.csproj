@@ -43,7 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SkillsAndProfessions\LevelUpInfo.cs" />
-    <Compile Include="SkillsAndProfessions\Menus\FlexibleLevelUpMenu.cs" />
+    <Compile Include="SkillsAndProfessions\Menus\LevelUpInfoMenu.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="SkillsAndProfessions\Profession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

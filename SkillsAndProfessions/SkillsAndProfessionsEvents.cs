@@ -13,15 +13,15 @@ namespace PatchAnything.SkillsAndProfessions {
             int skillID = ModEntry.Instance.Helper.Reflection.GetField<int>(levelUpMenu, "currentSkill").GetValue();
             int skillLevel = ModEntry.Instance.Helper.Reflection.GetField<int>(levelUpMenu, "currentLevel").GetValue();
 
+            dataManager.LoadData();
             Skill skill = dataManager.GetSkillByID(skillID);
 
             if (skill == null) {
                 ModEntry.Instance.Monitor.Log($"Can't level up. Failed to find skill with ID {skillID}.", LogLevel.Error);
             }
             else {
-                LevelUpInfo levelUp = dataManager.GetLevelUpInfo(Game1.player, (Skill) skill, skillLevel);
-                // TODO handle mail
-                Game1.activeClickableMenu = new FlexibleLevelUpMenu(levelUp);
+                LevelUpInfo levelUp = dataManager.GetLevelUpInfo(Game1.player, skill, skillLevel);
+                Game1.activeClickableMenu = new LevelUpInfoMenu(levelUp);
             }
         }
 

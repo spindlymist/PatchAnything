@@ -11,23 +11,23 @@ namespace PatchAnything.SkillsAndProfessions {
 
         public Skill Skill { get; }
         public int Level { get; }
-        public IEnumerable<string> ExtraInformationLines { get; }
-        public IEnumerable<CraftingRecipe> CraftingRecipes { get; }
-        public IEnumerable<CraftingRecipe> CookingRecipes { get; }
-        public IEnumerable<Profession> Professions { get; }
+        public ICollection<string> ExtraInformationLines { get; }
+        public ICollection<CraftingRecipe> Recipes { get; }
+        public int BigCraftableCount { get; }
+        public ICollection<Profession> Professions { get; }
 
         public LevelUpInfo(
             Skill skill,
             int level,
-            IEnumerable<string> extraInformationLines,
-            IEnumerable<CraftingRecipe> craftingRecipes,
-            IEnumerable<CraftingRecipe> cookingRecipes,
-            IEnumerable<Profession> professions) {
+            ICollection<string> extraInformationLines,
+            ICollection<CraftingRecipe> recipes,
+            int bigCraftableCount,
+            ICollection<Profession> professions) {
             Skill = skill;
             Level = level;
             ExtraInformationLines = extraInformationLines;
-            CraftingRecipes = craftingRecipes;
-            CookingRecipes = cookingRecipes;
+            Recipes = recipes;
+            BigCraftableCount = bigCraftableCount;
             Professions = professions;
         }
 

@@ -21,9 +21,10 @@ namespace PatchAnything {
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper) {
             ModEntry.Instance = this;
-            helper.Events.Display.MenuChanged += this.OnMenuChanged;
 
             skillsAndProfessions = new SkillsAndProfessionsDataManager();
+
+            helper.Events.Display.MenuChanged += this.OnMenuChanged;
         }
 
 
@@ -38,8 +39,9 @@ namespace PatchAnything {
             if (!Context.IsWorldReady)
                 return;
 
-            if (!(e.NewMenu is FlexibleLevelUpMenu) && e.NewMenu is StardewValley.Menus.LevelUpMenu levelUpMenu) {
+            if (!(e.NewMenu is LevelUpInfoMenu) && e.NewMenu is StardewValley.Menus.LevelUpMenu levelUpMenu) {
                 SkillsAndProfessionsEvents.ReplaceLevelUpMenu(skillsAndProfessions, levelUpMenu);
+                //Game1.activeClickableMenu = new LevelUpInfoMenu(null);
             }
         }
 
